@@ -1,0 +1,40 @@
+#####
+#  
+# FLOW_DOCKER_IMAGE="10.10.01.01:5555/nginx"
+# FLOW_DOCKER_KEEP_NUM=10
+# 
+#####
+
+
+name: docker-clean
+version: 0.0.1
+inputs:
+- name: FLOW_DOCKER_KEEP_NUM
+  type: integer
+  required: true
+- name: FLOW_DOCKER_IMAGE
+  type: string
+  required: true
+
+script: |
+
+  docker rmi $(docker images | awk '
+    BEGIN {
+    }
+
+    {
+      numToDel = "'$FLOWCI_JOB_BUILD_NUM'" - "'$FLOW_DOCKER_KEEP_NUM'"
+
+      if ($1 == "'$FLOW_DOCKER_IMAGE'") {
+          split($2, fields, ".")
+          image = $1
+          branch = fields[1]
+          version = fields[2]
+          imageid = $3
+
+          if (version != null && version < numToDel) {
+              print imageid
+          }
+      }
+    }
+  ')
